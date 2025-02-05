@@ -3,6 +3,8 @@ describe('Тести для сторінки логіну Hillel LMS', () => {
       emailInput: '[formcontrolname="email"]',
       passwordInput: '[formcontrolname="password"]',
       submitButton: 'button[type="submit"]',
+      googleLoginButton: '.page-login__sso-link--google',
+      appleLoginButton: '.page-login__sso-link--apple',
       registrationLink: 'a[href="/auth/registration"]',
       forgotPasswordLink: 'a[href="/auth/restore"]',
       supportLink: 'a[href="/support"]',
@@ -25,6 +27,22 @@ describe('Тести для сторінки логіну Hillel LMS', () => {
           .and('contain', 'Увійти');
       });
     });
+
+    it('Перевіряє кнопку "Вхід через Google"', () => {
+      cy.get(selectors.googleLoginButton).as('googleLoginButton')
+        .should('be.visible')
+        .and('contain', 'Вхід через Google')
+        .and('have.class', 'hi-button--secondary')
+        .and('have.attr', 'type', 'button');
+    });
+    
+    it('Перевіряє кнопку "Вхід через Apple"', () => {
+      cy.get(selectors.appleLoginButton).as('appleLoginButton')
+        .should('be.visible')
+        .and('contain', 'Вхід через Apple')
+        .and('have.class', 'hi-button--secondary')
+        .and('have.attr', 'type', 'button');
+    });    
   
     it('Перевіряє посилання "Реєстрація" та перенаправлення', () => {
       cy.get(selectors.registrationLink).as('registrationLink')
