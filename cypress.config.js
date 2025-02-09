@@ -1,4 +1,4 @@
-const { defineConfig } = require("cypress");
+const { defineConfig } = require('cypress');
 
 module.exports = defineConfig({
   defaultCommandTimeout: 10000,
@@ -8,10 +8,20 @@ module.exports = defineConfig({
   videosFolder: "cypress/videos",
   video: false,
   viewportWidth: 1280,
-  viewportheight: 720,
+  viewportHeight: 720,
   e2e: {
     setupNodeEvents(on, config) {
-      // implement node event listeners here
+      require('cypress-mochawesome-reporter/plugin')(on); // Підключення репортера для Mochawesome
+      // тут можна додавати інші слухачі подій (якщо потрібно)
+      return config;
     },
+    baseUrl: 'https://guest:welcome2qauto@qauto.forstudy.space', // Вказуємо базову URL-адресу
+  },
+  reporter: 'cypress-mochawesome-reporter', // Вказуємо репортер
+  reporterOptions: {
+    reportDir: 'cypress/reports', // Вказуємо папку для збереження звітів
+    overwrite: true,             // Перезаписувати звіти
+    html: true,                   // Генерувати HTML звіт
+    json: true,                   // Генерувати JSON звіт
   },
 });
