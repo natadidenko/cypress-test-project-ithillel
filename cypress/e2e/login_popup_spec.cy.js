@@ -1,4 +1,4 @@
-describe('Перевірка попапу входу', () => {
+describe('Login check', () => {
   beforeEach(() => {
     cy.visit('/'); // Відвідуємо головну сторінку
   });
@@ -40,7 +40,7 @@ describe('Перевірка попапу входу', () => {
 
   it('Перевірка закриття попапу', () => {
     cy.get('.header_signin').click();
-    cy.get('.close').click(); // Припускаємо, що кнопка закриття має клас 'close'
+    cy.get('.close').click(); 
     cy.get('#signinEmail').should('not.exist');
     cy.get('#signinPassword').should('not.exist');
   });
