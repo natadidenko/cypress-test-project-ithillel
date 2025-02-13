@@ -9,6 +9,10 @@ module.exports = defineConfig({
   video: false,
   viewportWidth: 1280,
   viewportHeight: 720,
+  env: {
+    username: 'email3@domain.com',
+    password: 'Qa123456!',
+  },
   e2e: {
     setupNodeEvents(on, config) {
       require('cypress-mochawesome-reporter/plugin')(on); // Підключення репортера для Mochawesome
