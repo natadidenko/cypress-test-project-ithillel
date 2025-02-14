@@ -5,8 +5,8 @@ module.exports = defineConfig({
   viewportWidth: 1280,
   viewportHeight: 720,
   env: {
-    username: 'email3@domain.com',
-    password: 'Qa123456!',
+    username: 'email4@domain.com',
+    password: '!Qa123456',
   },
   e2e: {
     baseUrl: 'https://guest:welcome2qauto@qauto.forstudy.space',
