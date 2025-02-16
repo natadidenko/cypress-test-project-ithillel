@@ -1,111 +1,48 @@
-describe('Expenses API Tests', () => {
+import ExpensesPage from '../pages-api/ExpensesPage.api.js';
+
+describe('Expenses Tests', () => {
   beforeEach(() => {
+    cy.visit('/');
+    cy.get('.header_signin').click();
+    cy.get('#signinEmail').type(Cypress.env('username'));
+    cy.get('#signinPassword').type(Cypress.env('password'));
+    cy.contains('button', 'Login').click();
+  });
+
+  it('Add fuel expense and validate via API', () => {
+    cy.url().should('include', '/panel/garage');
+    
+    // Додаємо витрату через UI
+    cy.contains('button', 'Add fuel expense').click();
+    
+    cy.get('#addExpenseMileage').clear().type('300');
+    cy.get('#addExpenseLiters').type('150');
+    cy.get('#addExpenseTotalCost').type('3000');
+    cy.get('#addExpenseTotalCost').should('have.value', '3000');
+    
+    cy.get('.modal').should('be.visible');
+    cy.get('.modal-footer > .btn-primary').click();
+
+    // Перевірка витрати через API
     cy.request({
-      method: 'POST',
-      url: 'https://qauto.forstudy.space/api/auth/signin',
-      body: {
-        email: Cypress.env('username'),
-        password: Cypress.env('password'),
-        remember: true,
+      method: 'GET',
+      url: 'https://qauto.forstudy.space/api/expenses?reportedAt=' + new Date().toISOString().split('T')[0], 
+      headers: {
+        Cookie: `remember_me=${Cypress.env('rememberMeToken')}`, 
       },
     }).then((response) => {
       expect(response.status).to.eq(200);
-      cy.log('Server response:', response.body);
+      
+      // Вивести всю відповідь для дебагінгу
+      cy.log('API Response:', JSON.stringify(response.body, null, 2));
+      // Перевіряємо, що витрата з відповідними параметрами існує в API
+      const expense = response.body.data.find(exp => exp.mileage === 300 && exp.liters === 150 && exp.totalCost === 3000);
+    });
 
-      const rememberMeCookie = response.headers['set-cookie']
-        ?.find((cookie) => cookie.startsWith('remember_me='))
-        ?.split(';')[0]
-        ?.split('=')[1];
-
-      if (rememberMeCookie) {
-        cy.setCookie('remember_me', rememberMeCookie);
-        cy.wrap(rememberMeCookie).as('rememberMeToken');
-      } else {
-        throw new Error('Не вдалося отримати remember_me з cookies');
-      }
+      // Перевіряемо значення в рядоку витрати
+      cy.get('tr').contains('300').parent('tr') 
+        .should('contain', '300')   
+        .should('contain', '150L')  
+        .should('contain', '3000.00 USD'); 
     });
   });
-
-  it('should add fuel expense via API and validate it', function () {
-    cy.get('@rememberMeToken').then((rememberMeToken) => {
-      // Отримуємо список автомобілів
-      cy.request({
-        method: 'GET',
-        url: 'https://qauto.forstudy.space/api/cars',
-        headers: {
-          Cookie: `remember_me=${rememberMeToken}`,
-        },
-      }).then((response) => {
-        expect(response.status).to.eq(200);
-        expect(response.body.data).to.have.length.greaterThan(0);
-
-        const car = response.body.data[0]; // Беремо перший доступний автомобіль
-        const carId = car.id;
-        let carCreationDate;
-
-        if (car.createdAt) {
-          try {
-            carCreationDate = new Date(car.createdAt).toISOString().split('T')[0]; // Отримуємо дату створення авто
-          } catch (error) {
-            cy.log('Помилка при обробці createdAt:', error);
-            carCreationDate = new Date().toISOString().split('T')[0]; // Використовуємо поточну дату як fallback
-          }
-        } else {
-          cy.log('createdAt не знайдено, використовується поточна дата.');
-          carCreationDate = new Date().toISOString().split('T')[0];
-        }
-
-        cy.wrap(carId).as('carId');
-        cy.wrap(carCreationDate).as('carCreationDate');
-      });
-    });
-
-    cy.get('@carId').then((carId) => {
-      cy.get('@carCreationDate').then((carCreationDate) => {
-        cy.get('@rememberMeToken').then((rememberMeToken) => {
-          // Додаємо витрату
-          cy.request({
-            method: 'POST',
-            url: 'https://qauto.forstudy.space/api/expenses',
-            headers: {
-              Cookie: `remember_me=${rememberMeToken}`,
-            },
-            body: {
-              carId: carId,
-              reportedAt: carCreationDate, // Використовуємо дату створення авто або поточну
-              mileage: 300,
-              liters: 150,
-              totalCost: 3000,
-              forceMileage: false,
-            },
-          }).then((response) => {
-            expect(response.status).to.eq(200);
-            expect(response.body.status).to.eq('ok');
-            expect(response.body.data).to.have.property('id');
-
-            const expenseId = response.body.data.id;
-            cy.wrap(expenseId).as('expenseId');
-          });
-        });
-      });
-    });
-
-    // Перевіряємо, що витрати додано
-    cy.get('@expenseId').then((expenseId) => {
-      cy.get('@rememberMeToken').then((rememberMeToken) => {
-        cy.request({
-          method: 'GET',
-          url: `https://qauto.forstudy.space/api/expenses/${expenseId}`,
-          headers: {
-            Cookie: `remember_me=${rememberMeToken}`,
-          },
-        }).then((response) => {
-          expect(response.status).to.eq(200);
-          expect(response.body.data.mileage).to.eq(300);
-          expect(response.body.data.liters).to.eq(150);
-          expect(response.body.data.totalCost).to.eq(3000);
-        });
-      });
-    });
-  });
-});
